@@ -441,6 +441,7 @@ class LinkHintsMode {
     // stable.
     this.stableSortCount = 0;
     this.hintMarkers = hintDescriptors.map((desc) => this.createMarkerFor(desc));
+    Utils.debugLog("LinkHintsMode constructor", { descriptors: hintDescriptors.length, localMarkers: this.hintMarkers.filter((m) => m.isLocalMarker()).length });
     this.markerMatcher = Settings.get("filterLinkHints") ? new FilterHints() : new AlphabetHints();
     this.markerMatcher.fillInMarkers(this.hintMarkers);
 
