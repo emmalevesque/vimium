@@ -520,21 +520,22 @@ const HintCoordinator = {
   },
 
   // This is sent by the content script once the user issues the link hints command.
-  async prepareToActivateLinkHintsMode(
-    tabId,
-    originatingFrameId,
-    { modeIndex, requestedByHelpDialog, isExtensionPage },
-  ) {
-    const frameIds = await getFrameIdsForTab(tabId);
-    // If link hints was triggered on a Vimium extension page (like the vimium help dialog or
-    // options page), we cannot directly retrieve the frameIds for those pages using the
-    // getFrameIdsForTab. However, as a workaround, if those pages were the pages activating hints,
-    // their frameId is equal to originatingFrameId.
-    if (isExtensionPage && !frameIds.includes(originatingFrameId)) {
-      frameIds.push(originatingFrameId);
-    }
-    const timeout = 3000;
-    let promises = frameIds.map(async (frameId) => {
+   async prepareToActivateLinkHintsMode(
+     tabId,
+     originatingFrameId,
+     { modeIndex, requestedByHelpDialog, isExtensionPage },
+   ) {
+     const frameIds = await getFrameIdsForTab(tabId);
+     Utils.debugLog("BG prepareToActivateLinkHintsMode", { tabId, originatingFrameId, modeIndex, isExtensionPage, frameIds });
+     // If link hints was triggered on a Vimium extension page (like the vimium help dialog or
+     // options page), we cannot directly retrieve the frameIds for those pages using the
+     // getFrameIdsForTab. However, as a workaround, if those pages were the pages activating hints,
+     // their frameId is equal to originatingFrameId.
+     if (isExtensionPage && !frameIds.includes(originatingFrameId)) {
+       frameIds.push(originatingFrameId);
+     }
+     const timeout = 3000;
+     let promises = frameIds.map(async (frameId) => {
       let promise = chrome.tabs.sendMessage(
         tabId,
         {

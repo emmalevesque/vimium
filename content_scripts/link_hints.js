@@ -255,9 +255,13 @@ const HintCoordinator = {
     const protocol = window.location.protocol;
     // chrome-extension, moz-extension (Firefox), extension (Edge).
     const isExtensionPage = protocol.endsWith("extension:");
+    const idx = availableModes.indexOf(mode);
+    HUD.show(`Debug: prepare mode=${mode.name} idx=${idx}`, 1500);
+    Utils.debugLog("LinkHints prepareToActivate", { name: mode.name, index: idx });
     chrome.runtime.sendMessage({
       handler: "prepareToActivateLinkHintsMode",
-      modeIndex: availableModes.indexOf(mode),
+      modeIndex: idx,
+      modeName: mode.name,
       isExtensionPage,
       requestedByHelpDialog: globalThis.isVimiumHelpDialog,
     });
@@ -272,6 +276,7 @@ const HintCoordinator = {
     const requireHref = [COPY_LINK_URL, COPY_LINK_CLEAN_URL, OPEN_INCOGNITO].includes(
       availableModes[modeIndex],
     );
+    Utils.debugLog("LinkHints getHintDescriptors", { modeIndex, requireHref });
     // If link hints is launched within the help dialog, then we only offer hints from that frame.
     // This improves the usability of the help dialog on the options page (particularly for
     // selecting command names).
@@ -280,6 +285,8 @@ const HintCoordinator = {
     } else {
       this.localHints = LocalHints.getLocalHints(requireHref);
     }
+    Utils.debugLog("LinkHints localHints", { count: this.localHints.length });
+    HUD.show(`Debug: hints=${this.localHints.length}`, 1200);
     this.localHintDescriptors = this.localHints.map(({ linkText }, localIndex) => (
       new HintDescriptor({
         frameId,
@@ -395,6 +402,7 @@ const LinkHints = {
     this.activateMode(count, { mode: COPY_LINK_URL });
   },
   activateModeToCopyCleanLinkUrl(count) {
+    HUD.show("Debug: activating clean-link mode", 1000);
     this.activateMode(count, { mode: COPY_LINK_CLEAN_URL });
   },
   activateModeWithQueue() {
