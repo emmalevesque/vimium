@@ -131,6 +131,26 @@ const COPY_LINK_CLEAN_URL = {
     }
   },
 };
+function copyLinkVia(link, transform) {
+  if (link?.href != null) {
+    let url = link.href;
+    if (url.slice(0, 7) === "mailto:") url = url.slice(7);
+    if (typeof transform === "function") {
+      try {
+        url = transform(url);
+      } catch (_e) {
+        // ignore transform errors and fall back to original
+      }
+    }
+    HUD.copyToClipboard(url);
+    let shown = url;
+    if (28 < shown.length) shown = shown.slice(0, 26) + "....";
+    HUD.show(`Yanked ${shown}`, 2000);
+  } else {
+    HUD.show("No link to yank.", 2000);
+  }
+}
+
 const OPEN_INCOGNITO = {
   name: "incognito",
   indicator: "Open link in incognito window",
