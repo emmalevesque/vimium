@@ -105,6 +105,32 @@ const COPY_LINK_URL = {
     }
   },
 };
+const COPY_LINK_CLEAN_URL = {
+  name: "clean-link",
+  indicator: "Copy clean link URL to Clipboard",
+  linkActivator(link) {
+    if (link.href != null) {
+      let raw = link.href;
+      // Handle mailto separately (strip the scheme as existing behavior does).
+      if (raw.slice(0, 7) === "mailto:") raw = raw.slice(7);
+      let clean = raw;
+      try {
+        // Resolve relative URLs against the document location.
+        const u = new URL(raw, document.location.href);
+        clean = `${u.origin}${u.pathname}`;
+      } catch (_e) {
+        // Fallback: strip query/hash manually for non-standard URLs.
+        clean = raw.replace(/[?#].*$/, "");
+      }
+      HUD.copyToClipboard(clean);
+      let shown = clean;
+      if (28 < shown.length) shown = shown.slice(0, 26) + "....";
+      HUD.show(`Yanked ${shown}`, 2000);
+    } else {
+      HUD.show("No link to yank.", 2000);
+    }
+  },
+};
 const OPEN_INCOGNITO = {
   name: "incognito",
   indicator: "Open link in incognito window",
@@ -152,6 +178,7 @@ const availableModes = [
   OPEN_IN_NEW_FG_TAB,
   OPEN_WITH_QUEUE,
   COPY_LINK_URL,
+  COPY_LINK_CLEAN_URL,
   OPEN_INCOGNITO,
   DOWNLOAD_LINK_URL,
   COPY_LINK_TEXT,
@@ -222,7 +249,9 @@ const HintCoordinator = {
   getHintDescriptors({ modeIndex, requestedByHelpDialog }, _sender) {
     if (!DomUtils.isReady() || DomUtils.windowIsTooSmall()) return [];
 
-    const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
+    const requireHref = [COPY_LINK_URL, COPY_LINK_CLEAN_URL, OPEN_INCOGNITO].includes(
+      availableModes[modeIndex],
+    );
     // If link hints is launched within the help dialog, then we only offer hints from that frame.
     // This improves the usability of the help dialog on the options page (particularly for
     // selecting command names).
@@ -344,6 +373,9 @@ const LinkHints = {
   },
   activateModeToCopyLinkUrl(count) {
     this.activateMode(count, { mode: COPY_LINK_URL });
+  },
+  activateModeToCopyCleanLinkUrl(count) {
+    this.activateMode(count, { mode: COPY_LINK_CLEAN_URL });
   },
   activateModeWithQueue() {
     this.activateMode(1, { mode: OPEN_WITH_QUEUE });
